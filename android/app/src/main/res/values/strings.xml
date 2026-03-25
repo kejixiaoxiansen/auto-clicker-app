@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">自动点击器</string>
+    <string name="accessibility_service_name">自动点击器服务</string>
+    <string name="accessibility_service_description">自动点击器需要无障碍服务权限来执行自动点击操作。启用后，应用可以在其他应用上模拟点击手势。</string>
+</resources>

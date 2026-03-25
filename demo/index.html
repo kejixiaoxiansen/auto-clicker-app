@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>自动点击器 - App模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 50px;
+            padding: 15px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #f5f5f5;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 1000;
+        }
+
+        /* App Styles */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            padding: 60px 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .settings-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* Script Cards */
+        .script-list {
+            padding: 8px 16px;
+        }
+
+        .script-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .script-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .script-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .loop-badge {
+            background: #E3F2FD;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            color: #1976D2;
+            font-weight: 600;
+        }
+
+        .script-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .script-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 12px;
+        }
+
+        .script-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* FAB */
+        .fab {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #2196F3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            transition: transform 0.2s;
+            z-index: 200;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        .schedule-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: #FF9800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+            z-index: 200;
+        }
+
+        /* Create Menu */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .create-menu {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px;
+            width: 280px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 160;
+        }
+
+        .create-menu.active {
+            display: block;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-icon {
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .menu-text h4 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .menu-text p {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0 16px;
+        }
+
+        /* Recording Screen */
+        .recording-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 300;
+            display: none;
+        }
+
+        .recording-screen.active {
+            display: block;
+        }
+
+        .recording-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .click-marker {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #2196F3;
+            border: 3px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .recording-bar {
+            position: absolute;
+            top: 50px;
+            left: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 25px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recording-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background: #F44336;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .timer-text {
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .event-count {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .recording-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.7);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .control-btn.save {
+            background: #2196F3;
+        }
+
+        .recording-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        /* Playback Screen */
+        .playback-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 300;
+            display: none;
+        }
+
+        .playback-screen.active {
+            display: block;
+        }
+
+        .playback-indicator {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            background: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .playback-indicator.active {
+            transform: scale(1.3);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .playback-controls-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            padding: 20px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .playback-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .playback-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .playback-btn.main {
+            width: 70px;
+            height: 70px;
+            border-radius: 35px;
+            background: #4CAF50;
+            font-size: 28px;
+        }
+
+        .speed-display {
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtitle {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        /* Demo Scripts */
+        .demo-script-1 { --delay: 0s; }
+        .demo-script-2 { --delay: 0.1s; }
+        .demo-script-3 { --delay: 0.2s; }
+
+        .script-card {
+            animation: slideIn 0.3s ease-out backwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating Demo Control */
+        .demo-control {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .demo-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background: #2196F3;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .demo-btn:hover {
+            background: #1976D2;
+        }
+
+        .demo-btn.secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .demo-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Modal */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 400;
+            display: none;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-height: 80%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn.cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-btn.save {
+            background: #2196F3;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="notch"></div>
+        <div class="phone-screen">
+            <!-- Home Screen -->
+            <div class="app-container" id="homeScreen">
+                <div class="header">
+                    <h1 class="header-title">自动点击器</h1>
+                    <div class="settings-btn" onclick="showSettings()">⚙️</div>
+                </div>
+
+                <div class="script-list" id="scriptList">
+                    <!-- Scripts will be rendered here -->
+                </div>
+
+                <div class="fab" id="fab" onclick="toggleCreateMenu()">+</div>
+                <div class="schedule-btn" onclick="showSchedule()">⏰</div>
+            </div>
+
+            <!-- Create Menu Overlay -->
+            <div class="overlay" id="overlay" onclick="toggleCreateMenu()"></div>
+            <div class="create-menu" id="createMenu">
+                <div class="menu-item" onclick="startRecording('record')">
+                    <span class="menu-icon">⏺</span>
+                    <div class="menu-text">
+                        <h4>录制点击</h4>
+                        <p>录制你的点击操作过程</p>
+                    </div>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" onclick="startRecording('manual')">
+                    <span class="menu-icon">👆</span>
+                    <div class="menu-text">
+                        <h4>手动设置</h4>
+                        <p>按顺序点击屏幕设置位置</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recording Screen -->
+            <div class="recording-screen" id="recordingScreen">
+                <div class="recording-overlay" id="recordingOverlay" onclick="handleRecordingClick(event)">
+                    <div class="recording-hint" id="recordingHint">点击屏幕设置第 1 个位置</div>
+                </div>
+                <div class="recording-bar">
+                    <div class="timer">
+                        <div class="recording-indicator"></div>
+                        <span class="timer-text" id="timer">00:00.00</span>
+                    </div>
+                    <span class="event-count" id="eventCount">0 个点击</span>
+                </div>
+                <div class="recording-controls">
+                    <button class="control-btn" onclick="cancelRecording()">取消</button>
+                    <button class="control-btn" onclick="pauseRecording()">暂停</button>
+                    <button class="control-btn save" onclick="showSaveModal()">保存</button>
+                </div>
+            </div>
+
+            <!-- Playback Screen -->
+            <div class="playback-screen" id="playbackScreen">
+                <div class="playback-overlay" id="playbackOverlay"></div>
+                <div class="playback-controls-panel">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="playback-buttons">
+                        <button class="playback-btn" onclick="changeSpeed()">
+                            <span class="speed-display" id="speedDisplay">1x</span>
+                        </button>
+                        <button class="playback-btn main" id="playPauseBtn" onclick="togglePlayback()">▶</button>
+                        <button class="playback-btn" onclick="stopPlayback()">⏹</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Modal -->
+            <div class="modal" id="saveModal">
+                <div class="modal-content">
+                    <h3 class="modal-title">保存脚本</h3>
+                    <div class="input-group">
+                        <label class="input-label">脚本名称 *</label>
+                        <input type="text" class="input" id="scriptNameInput" placeholder="输入脚本名称">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">描述（可选）</label>
+                        <input type="text" class="input" id="scriptDescInput" placeholder="输入脚本描述">
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel" onclick="hideSaveModal()">取消</button>
+                        <button class="modal-btn save" onclick="saveScript()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Controls -->
+    <div class="demo-control">
+        <button class="demo-btn secondary" onclick="resetDemo()">🔄 重置</button>
+        <button class="demo-btn" onclick="simulatePlayback()">▶ 模拟播放</button>
+        <button class="demo-btn" onclick="showTutorial()">❓ 教程</button>
+    </div>
+
+    <script>
+        // Demo Data
+        let scripts = [
+            {
+                id: 1,
+                name: '自动签到脚本',
+                description: '每日自动签到领取奖励',
+                events: [
+                    { x: 150, y: 200, type: 'tap' },
+                    { x: 200, y: 300, type: 'tap' },
+                    { x: 180, y: 400, type: 'tap' }
+                ],
+                loopCount: 1,
+                speed: 1,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 2,
+                name: '游戏连点器',
+                description: '快速连续点击屏幕中央',
+                events: [
+                    { x: 187, y: 350, type: 'tap' },
+                    { x: 187, y: 350, type: 'tap' },
+                    { x: 187, y: 350, type: 'tap' },
+                    { x: 187, y: 350, type: 'tap' },
+                    { x: 187, y: 350, type: 'tap' }
+                ],
+                loopCount: 10,
+                speed: 2,
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+                id: 3,
+                name: '滑动解锁',
+                description: '自动滑动解锁屏幕',
+                events: [
+                    { x: 100, y: 600, type: 'swipe', endX: 275, endY: 600 }
+                ],
+                loopCount: 1,
+                speed: 1,
+                createdAt: new Date(Date.now() - 172800000).toISOString()
+            }
+        ];
+
+        let recordingMode = '';
+        let recordedEvents = [];
+        let manualStep = 1;
+        let recordingTimer = null;
+        let recordingStartTime = null;
+        let isPaused = false;
+        let currentSpeed = 1;
+        let isPlaying = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderScripts();
+        });
+
+        // Render Scripts
+        function renderScripts() {
+            const list = document.getElementById('scriptList');
+            
+            if (scripts.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📱</div>
+                        <h3 class="empty-title">还没有脚本</h3>
+                        <p class="empty-subtitle">点击右下角按钮创建你的第一个自动点击脚本</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = scripts.map((script, index) => `
+                <div class="script-card demo-script-${(index % 3) + 1}" onclick="viewScript(${script.id})">
+                    <div class="script-header">
+                        <div style="display: flex; align-items: center; flex: 1;">
+                            <span class="script-name">${script.name}</span>
+                            ${script.loopCount > 1 ? `<span class="loop-badge">循环×${script.loopCount}</span>` : ''}
+                        </div>
+                        <div class="play-btn" onclick="event.stopPropagation(); playScript(${script.id})">▶</div>
+                    </div>
+                    ${script.description ? `<p class="script-desc">${script.description}</p>` : ''}
+                    <div class="script-stats">
+                        <span class="stat">👆 ${script.events.length} 个点击</span>
+                        <span class="stat">⏱ ${calculateDuration(script)}</span>
+                        <span class="stat">⚡ ${script.speed}x</span>
+                    </div>
+                    <p class="script-date">更新于 ${formatDate(script.createdAt)}</p>
+                </div>
+            `).join('');
+        }
+
+        function calculateDuration(script) {
+            if (script.events.length === 0) return '0秒';
+            return `${script.events.length}秒`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
+        // Create Menu
+        function toggleCreateMenu() {
+            document.getElementById('overlay').classList.toggle('active');
+            document.getElementById('createMenu').classList.toggle('active');
+            const fab = document.getElementById('fab');
+            fab.textContent = fab.textContent === '+' ? '✕' : '+';
+        }
+
+        // Recording
+        function startRecording(mode) {
+            recordingMode = mode;
+            recordedEvents = [];
+            manualStep = 1;
+            isPaused = false;
+            
+            toggleCreateMenu();
+            document.getElementById('recordingScreen').classList.add('active');
+            document.getElementById('recordingHint').textContent = 
+                mode === 'manual' ? `点击屏幕设置第 ${manualStep} 个位置` : '点击屏幕录制点击，长按录制长按事件';
+            
+            if (mode === 'record') {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            recordingStartTime = Date.now();
+            recordingTimer = setInterval(() => {
+                if (!isPaused) {
+                    const elapsed = Date.now() - recordingStartTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    const ms = Math.floor((elapsed % 1000) / 10);
+                    document.getElementById('timer').textContent = 
+                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+                }
+            }, 10);
+        }
+
+        function handleRecordingClick(event) {
+            if (isPaused) return;
+            
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            recordedEvents.push({ x, y, type: 'tap' });
+            
+            // Add marker
+            const marker = document.createElement('div');
+            marker.className = 'click-marker';
+            marker.style.left = (x - 20) + 'px';
+            marker.style.top = (y - 20) + 'px';
+            marker.textContent = recordingMode === 'manual' ? manualStep : recordedEvents.length;
+            document.getElementById('recordingOverlay').appendChild(marker);
+            
+            // Update UI
+            document.getElementById('eventCount').textContent = `${recordedEvents.length} 个点击`;
+            
+            if (recordingMode === 'manual') {
+                manualStep++;
+                document.getElementById('recordingHint').textContent = `点击屏幕设置第 ${manualStep} 个位置`;
+            }
+        }
+
+        function pauseRecording() {
+            isPaused = !isPaused;
+            event.target.textContent = isPaused ? '继续' : '暂停';
+        }
+
+        function cancelRecording() {
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+            document.getElementById('recordingScreen').classList.remove('active');
+            document.getElementById('recordingOverlay').innerHTML = `
+                <div class="recording-hint" id="recordingHint">点击屏幕设置第 1 个位置</div>
+            `;
+            document.getElementById('timer').textContent = '00:00.00';
+            document.getElementById('eventCount').textContent = '0 个点击';
+        }
+
+        // Save Modal
+        function showSaveModal() {
+            document.getElementById('saveModal').classList.add('active');
+        }
+
+        function hideSaveModal() {
+            document.getElementById('saveModal').classList.remove('active');
+        }
+
+        function saveScript() {
+            const name = document.getElementById('scriptNameInput').value;
+            const desc = document.getElementById('scriptDescInput').value;
+            
+            if (!name.trim()) {
+                alert('请输入脚本名称');
+                return;
+            }
+            
+            scripts.push({
+                id: Date.now(),
+                name: name,
+                description: desc,
+                events: recordedEvents,
+                loopCount: 1,
+                speed: 1,
+                createdAt: new Date().toISOString()
+            });
+            
+            hideSaveModal();
+            cancelRecording();
+            renderScripts();
+            
+            document.getElementById('scriptNameInput').value = '';
+            document.getElementById('scriptDescInput').value = '';
+        }
+
+        // Playback
+        function playScript(id) {
+            const script = scripts.find(s => s.id === id);
+            if (!script) return;
+            
+            document.getElementById('playbackScreen').classList.add('active');
+            const overlay = document.getElementById('playbackOverlay');
+            overlay.innerHTML = '';
+            
+            // Create indicators
+            script.events.forEach((event, index) => {
+                const indicator = document.createElement('div');
+                indicator.className = 'playback-indicator';
+                indicator.style.left = (event.x - 15) + 'px';
+                indicator.style.top = (event.y - 15) + 'px';
+                indicator.textContent = index + 1;
+                indicator.id = `indicator-${index}`;
+                overlay.appendChild(indicator);
+            });
+            
+            simulatePlaybackAnimation(script);
+        }
+
+        function simulatePlaybackAnimation(script) {
+            isPlaying = true;
+            let currentIndex = 0;
+            const total = script.events.length;
+            
+            function playNext() {
+                if (currentIndex >= total || !isPlaying) {
+                    isPlaying = false;
+                    document.getElementById('playPauseBtn').textContent = '▶';
+                    return;
+                }
+                
+                // Update progress
+                const progress = ((currentIndex + 1) / total) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                // Highlight current indicator
+                document.querySelectorAll('.playback-indicator').forEach((ind, i) => {
+                    ind.classList.toggle('active', i === currentIndex);
+                });
+                
+                currentIndex++;
+                setTimeout(playNext, 800 / currentSpeed);
+            }
+            
+            playNext();
+        }
+
+        function togglePlayback() {
+            isPlaying = !isPlaying;
+            document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸' : '▶';
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            document.getElementById('playbackScreen').classList.remove('active');
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        function changeSpeed() {
+            const speeds = [0.5, 1, 1.5, 2, 3, 5];
+            const currentIndex = speeds.indexOf(currentSpeed);
+            currentSpeed = speeds[(currentIndex + 1) % speeds.length];
+            document.getElementById('speedDisplay').textContent = currentSpeed + 'x';
+        }
+
+        // Demo Controls
+        function resetDemo() {
+            scripts = [
+                {
+                    id: 1,
+                    name: '自动签到脚本',
+                    description: '每日自动签到领取奖励',
+                    events: [
+                        { x: 150, y: 200, type: 'tap' },
+                        { x: 200, y: 300, type: 'tap' },
+                        { x: 180, y: 400, type: 'tap' }
+                    ],
+                    loopCount: 1,
+                    speed: 1,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    name: '游戏连点器',
+                    description: '快速连续点击屏幕中央',
+                    events: [
+                        { x: 187, y: 350, type: 'tap' },
+                        { x: 187, y: 350, type: 'tap' },
+                        { x: 187, y: 350, type: 'tap' },
+                        { x: 187, y: 350, type: 'tap' },
+                        { x: 187, y: 350, type: 'tap' }
+                    ],
+                    loopCount: 10,
+                    speed: 2,
+                    createdAt: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    id: 3,
+                    name: '滑动解锁',
+                    description: '自动滑动解锁屏幕',
+                    events: [
+                        { x: 100, y: 600, type: 'swipe', endX: 275, endY: 600 }
+                    ],
+                    loopCount: 1,
+                    speed: 1,
+                    createdAt: new Date(Date.now() - 172800000).toISOString()
+                }
+            ];
+            renderScripts();
+        }
+
+        function simulatePlayback() {
+            if (scripts.length > 0) {
+                playScript(scripts[0].id);
+            }
+        }
+
+        function showTutorial() {
+            alert(`使用教程：
+
+1. 创建脚本：
+   • 点击右下角 + 按钮
+   • 选择"录制点击"或"手动设置"
+
+2. 录制模式：
+   • 点击屏幕录制你的操作
+   • 支持普通点击和长按
+
+3. 手动模式：
+   • 按1,2,3顺序点击设置位置
+   • 每个点击间隔1秒
+
+4. 播放脚本：
+   • 点击脚本卡片或播放按钮
+   • 支持调速(0.5x-5x)和循环
+
+5. 定时任务：
+   • 点击左下角⏰按钮
+   • 设置定时执行时间`);
+        }
+
+        function viewScript(id) {
+            const script = scripts.find(s => s.id === id);
+            alert(`脚本详情：\n\n名称：${script.name}\n描述：${script.description || '无'}\n点击数：${script.events.length}\n循环：${script.loopCount}次\n速度：${script.speed}x`);
+        }
+
+        function showSettings() {
+            alert('设置功能：\n\n• 显示点击指示器\n• 震动反馈\n• 声音提示\n• 默认播放速度\n• 自动保存录制');
+        }
+
+        function showSchedule() {
+            alert('定时任务：\n\n• 添加定时执行脚本\n• 支持单次/每天/每周\n• 精确到毫秒级定时');
+        }
+    </script>
+</body>
+</html>
