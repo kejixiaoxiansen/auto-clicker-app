@@ -37,12 +37,17 @@ jobs:
           cd android/app
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
+      - name: Create Resource Directories
+        run: |
+          cd android/app/src/main/res
+          mkdir -p mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi
+
       - name: Generate Launcher Icons
         run: |
           cd android/app/src/main/res
           for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
-            mkdir -p $dir
-            echo '<?xml version="1.0" encoding="utf-8"?>
+            cat > $dir/ic_launcher.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -54,8 +59,10 @@ jobs:
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M38,38h32v32h-32z" />
-</vector>' > $dir/ic_launcher.xml
-            echo '<?xml version="1.0" encoding="utf-8"?>
+</vector>
+EOF
+            cat > $dir/ic_launcher_round.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -67,7 +74,8 @@ jobs:
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M38,38h32v32h-32z" />
-</vector>' > $dir/ic_launcher_round.xml
+</vector>
+EOF
           done
 
       - name: Build Release APK
