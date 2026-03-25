@@ -27,8 +27,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.3'
 
       - name: Generate Debug Keystore
         run: |
@@ -38,7 +40,7 @@ jobs:
       - name: Build Release APK
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
+          gradle assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
