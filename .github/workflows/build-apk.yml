@@ -49,6 +49,40 @@ jobs:
             printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<vector xmlns:android="http://schemas.android.com/apk/res/android"' '    android:width="108dp"' '    android:height="108dp"' '    android:viewportWidth="108"' '    android:viewportHeight="108">' '    <path' '        android:fillColor="#2196F3"' '        android:pathData="M0,0h108v108h-108z" />' '    <path' '        android:fillColor="#FFFFFF"' '        android:pathData="M38,38h32v32h-32z" />' '</vector>' > "$dir/ic_launcher.xml"
             printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<vector xmlns:android="http://schemas.android.com/apk/res/android"' '    android:width="108dp"' '    android:height="108dp"' '    android:viewportWidth="108"' '    android:viewportHeight="108">' '    <path' '        android:fillColor="#1976D2"' '        android:pathData="M0,0h108v108h-108z" />' '    <path' '        android:fillColor="#FFFFFF"' '        android:pathData="M38,38h32v32h-32z" />' '</vector>' > "$dir/ic_launcher_round.xml"
           done
+<<<<<<< HEAD
+=======
+
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,38h32v32h-32z" />
+</vector>
+EOF
+            cat > $dir/ic_launcher_round.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,38h32v32h-32z" />
+</vector>
+EOF
+          done
+>>>>>>> 748c2914a5cfbcf70f507f53eb92407abc29e2a9
 
       - name: Build Release APK
         run: |
