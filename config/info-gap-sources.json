@@ -1,0 +1,41 @@
+{
+  "maxItemsPerSource": 15,
+  "sources": [
+    {
+      "name": "36Kr 出海",
+      "region": "CN",
+      "type": "rss",
+      "url": "https://36kr.com/feed"
+    },
+    {
+      "name": "虎嗅",
+      "region": "CN",
+      "type": "rss",
+      "url": "https://www.huxiu.com/rss/0.xml"
+    },
+    {
+      "name": "爱范儿",
+      "region": "CN",
+      "type": "rss",
+      "url": "https://www.ifanr.com/feed"
+    },
+    {
+      "name": "Product Hunt",
+      "region": "GLOBAL",
+      "type": "rss",
+      "url": "https://www.producthunt.com/feed"
+    },
+    {
+      "name": "TechCrunch",
+      "region": "GLOBAL",
+      "type": "rss",
+      "url": "https://techcrunch.com/feed/"
+    },
+    {
+      "name": "The Verge",
+      "region": "GLOBAL",
+      "type": "rss",
+      "url": "https://www.theverge.com/rss/index.xml"
+    }
+  ]
+}
